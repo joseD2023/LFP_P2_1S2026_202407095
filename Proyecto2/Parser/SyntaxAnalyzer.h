@@ -1,0 +1,8 @@
+//
+// Created by josev on 28/04/2026.
+//
+
+#ifndef PROYECTO2_SYNTAXANALYZER_H
+#define PROYECTO2_SYNTAXANALYZER_H
+
+#endif //PROYECTO2_SYNTAXANALYZER_H

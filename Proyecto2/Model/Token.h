@@ -14,8 +14,15 @@ enum class TipoToken {
     STRING, //Cadena
     DELIMITADORES, //Delimitadores
     PRIORIDADES,  //Enum Prioridades
+    LLAVE_ABRE,
+    LLAVE_CIERRA,
+    CORCHETE_ABRE,
+    CORCHETE_CIERRA,
+    DOS_PUNTOS,
+    COMA,
+    PUNTO_COMA,
+    PUNTO,
     DESCONOCIDO // ningun tipo Token
-
 };
 
 

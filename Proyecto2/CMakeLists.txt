@@ -9,4 +9,6 @@ add_executable(Proyecto2 main.cpp
         Model/Token.h
         Model/Token.cpp
         Errores/LexicalError.h
-        Errores/LexicalError.cpp)
+        Errores/LexicalError.cpp
+        Parser/SyntaxAnalyzer.h
+        Parser/SyntaxAnalyzer.cpp)

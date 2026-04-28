@@ -45,6 +45,14 @@ void LexicalAnalyzer::mostrarAnalyze() {
             case TipoToken::NUMBER: cout << "NUMERO"; break;
             case TipoToken::FECHA: cout << "FECHA"; break;
             case TipoToken::DESCONOCIDO: cout << "DESCONOCIDO"; break;
+            case TipoToken::DOS_PUNTOS: cout << "DOS_PUNTOS"; break;
+            case TipoToken::COMA: cout << "COMA"; break;
+            case TipoToken::CORCHETE_ABRE: cout << "CORCHETE_ABRE"; break;
+            case TipoToken::CORCHETE_CIERRA: cout << "CORCHETE_CIERRA"; break;
+            case TipoToken::LLAVE_ABRE: cout << "LLAVE_ABRE"; break;
+            case TipoToken::LLAVE_CIERRA: cout << "LLAVE_CIERRA"; break;
+            case TipoToken::PUNTO_COMA: cout << "PUNTO_COMA"; break;
+            case TipoToken::PUNTO: cout << "PUNTO"; break;
             default: cout << "DESCONOCIDO"; break;
         }
 
@@ -107,27 +115,65 @@ void LexicalAnalyzer::analyze() {
                 }
 
                 if (isalpha(c)) { //si encontramos el primer caracter entonces avanzamos a un estado de palabras
+                    cout << "ENTRAMOS ESTADO 1" << endl;
                     lexeme += avance();
                     estado = 1;
                     break;
                 }
 
                 if (isdigit(c)) { // si viene un digito redirigirnos a un estado donde trabajemos con ello
+                    cout << "ENTRAMOS ESTADO 2" << endl;
                     lexeme += avance();
                     estado = 2;
                     break;
                 }
 
                 if (c == '"') {
+                    cout << "ENTRAMOS ESTADO 3" << endl;
                     lexeme += avance();
                     estado = 3;
                     break;
                 }
 
-                if (c == ':' || c == '[' || c == ']' || c == '{' || c == '}' || c == ',' || c == ':' || c == ';' || c == '-') {
-                    lexeme += avance();
-                    tokens.push_back(Token(TipoToken::DELIMITADORES, lexeme, fila, columna));
-                    lexeme = "";
+                if (c == '{') {
+                    avance();
+                    tokens.push_back(Token(TipoToken::LLAVE_ABRE, "{", fila, columna));
+                    break;
+                }
+
+                if (c == '}') {
+                    avance();
+                    tokens.push_back(Token(TipoToken::LLAVE_CIERRA, "}", fila, columna));
+                    break;
+                }
+
+                if (c == '[') {
+                    avance();
+                    tokens.push_back(Token(TipoToken::CORCHETE_ABRE, "[", fila, columna));
+                    break;
+                }
+
+                if (c == ']') {
+                    avance();
+                    tokens.push_back(Token(TipoToken::CORCHETE_CIERRA, "]", fila, columna));
+                    break;
+                }
+
+                if (c == ':') {
+                    avance();
+                    tokens.push_back(Token(TipoToken::DOS_PUNTOS, ":", fila, columna));
+                    break;
+                }
+
+                if (c == ',') {
+                    avance();
+                    tokens.push_back(Token(TipoToken::COMA, ",", fila, columna));
+                    break;
+                }
+
+                if (c == ';') {
+                    avance();
+                    tokens.push_back(Token(TipoToken::PUNTO_COMA, ";", fila, columna));
                     break;
                 }
 
@@ -136,7 +182,6 @@ void LexicalAnalyzer::analyze() {
                 }
 
                 //si no es ninguno de estos entonces debe venir un error
-
                 lexeme += avance();
                 errores.push_back(LexicalError(lexeme, fila, columna, "Caracter No reconocido", "ERROR"));
                 lexeme = "";
@@ -148,39 +193,38 @@ void LexicalAnalyzer::analyze() {
                  * fecha
                  */
 
+                cout << "Construccion Lexema Estado 1: " << lexeme << endl;
+
                 if (isalpha(c) || c == '_') { //basicamente construimos las palabras en este apartado
                     lexeme += avance();
+                    cout << "Construccion Caracter y _ : " << lexeme <<  endl;
                 }else {
-
+                    cout << "Verificamos si es una palabra resevada o prioridad: " << lexeme << endl;
                     if (esReservada(lexeme)) {
+                        cout << "Palabras Lexemas en Reservadas si Valido " << lexeme << endl,
                         tokens.push_back(Token(TipoToken::PALABRARESEVADA, lexeme, fila, columna));
                         lexeme = "";
                         estado = 0;
                         break;
+                    }else if(esPrioridad(lexeme)) {
+                        tokens.push_back(Token(TipoToken::PRIORIDADES, lexeme,fila, columna));
+                        lexeme = "";
+                        estado = 0;
                     }else {
-                        errores.push_back(LexicalError(lexeme, fila, columna, "Palabra Reservada No reconocida", "ERROR"));
+                        errores.push_back(LexicalError(lexeme, fila, columna, "Token No Reconocido", "ERROR"));
                         lexeme = "";
                         estado = 0;
                     }
-
-                    if (esPrioridad(lexeme)) {
-                        tokens.push_back(Token(TipoToken::PRIORIDADES, lexeme, fila, columna));
-                        lexeme = "";
-                        estado = 0;
-
-
-                    }else {
-                        errores.push_back(LexicalError(lexeme, fila, columna, "Prioridad No reconocida", "ERROR"));
-                        lexeme = "";
-                        estado = 0;
-                    }
-
                 }
+
+                break;
 
             case 2:
                 /*aqui mayormente vamos a trabajar con lo que son los numero o las fechas pero como tal no viene numeros
                  * solos sino que vienen parte de las fechas
                  */
+
+                cout << "Construccion Lexema Estado 2: " << lexeme << endl;
 
                 if (isdigit(c)) {
                     lexeme += avance();
@@ -192,58 +236,81 @@ void LexicalAnalyzer::analyze() {
                     break;
                 }
 
+                break;
+
+            case 3:
+                /*Ahora vamos analizar la parte de lo que es un String para comprobar que lo sea
+                 * Entonces basicamente ya deberia pasar digamos "Proyecto LFP"  entonces va guardando todo
+                 * hasta que aparezca otra '"' entonces debemos tener el control
+                 */
+
+                cout << "Construccion Lexema Estado 3: " << lexeme << endl;
+
+                if (c == '\0') {
+                    errores.push_back(LexicalError(lexeme, fila, columna, "Cadena No Cerrada", "CRITICO"));
+                    lexeme = "";
+                    estado = 0;
+                }
+                else if (c == '\n') {
+                    errores.push_back(LexicalError(lexeme, fila, columna, "Cadena No Cerrada", "CRITICO"));
+                    lexeme = "";
+                    estado = 0;
+                }
+                else if (c == '"') {
+                    lexeme += avance(); // consumir la comilla final
+                    tokens.push_back(Token(TipoToken::STRING, lexeme, fila, columna));
+                    lexeme = "";
+                    estado = 0;
+                }
+                else {
+                    lexeme += avance(); // seguir acumulando contenido
+                }
+                break;
+
             case 4:
                 /*Aquí vamos con la continuacion de lo que es la fecha y la cual vamos a trabjar
                  * por el lexema ya viene tipo 2026- con 4 digitios
                  */
+                cout << "Construccion Lexema Estado 4: " << lexeme << endl;
 
-                if (isdigit(c)) {
+                if (isdigit(c) || c == '-') {
                     lexeme += avance(); /*aqui va a llegar a 2026-06 pero cuando aparezca */
-                    if (lexeme.length()-5 == 2) {
-                        string mes = lexeme.substr(5,2);
-                        int mesN = stoi(mes);
-                        if (mesN >= 1 && mesN <= 12) {
-                            if (c == '-') {
-                                lexeme += avance();
-                                estado = 5; /*Luego pasamos a otro estado para seguir con el numero*/
-                            }else {
-                                errores.push_back(LexicalError(lexeme, fila, columna, "Formato de Fecha Invalido", "ERROR"));
+                }else {
+
+
+                    if (lexeme.length() == 10 && lexeme[4] == '-' && lexeme[7] == '-' ) {
+                        //si tiene la estructura correcta entonces podemos seguir adelante
+                        // cuando termine de tomar todos los digitos entonces venimos nosotros y comparamos cuando termine
+                        int meStr = stoi(lexeme.substr(5,2));
+                        int diaStr = stoi(lexeme.substr(8,2));
+                        if (meStr>= 1 && meStr <= 12) {
+                            if (diaStr>=1 && diaStr <= 31) {
+                                //si se cumple bien entonces el Token es valido
+                                tokens.push_back(Token(TipoToken::FECHA, lexeme, fila, columna));
                                 lexeme = "";
                                 estado = 0;
+                            }else {
+                                errores.push_back(LexicalError(lexeme, fila, columna, "Dia Invalido", "ERROR"));
+                                lexeme = "";
+                                estado = 0;
+
                             }
+
                         }else {
-                            errores.push_back(LexicalError(lexeme, fila, columna, "Mes Invalido dentro Formato", "ERROR"));
-                            estado = 0;
+                            errores.push_back(LexicalError(lexeme, fila, columna, "Mes Invalido", "ERROR"));
                             lexeme = "";
+                            estado = 0;
                         }
+
+                    }else {
+                        errores.push_back(LexicalError(lexeme, fila, columna, "Formato Invalido AAAA-MM-DD", "ERROR"));
+                        lexeme = "";
+                        estado = 0;
                     }
 
+                    break;
                 }
-
-            case 5:
-                /*ahora necesitamos concluir la parte de la fecha despues 2026-06-34 fecha validas*/
-
-                if (isdigit(c)) {
-
-                }
-
-
-
-
-
         }
 
-
-
     }
-
-
-
-
-
-
-
-
-
-
 }

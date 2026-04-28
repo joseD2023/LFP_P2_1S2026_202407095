@@ -32,6 +32,22 @@ string Token::getTipoToken() const {
             return "PRIORIDADES";
         case TipoToken::DESCONOCIDO:
             return "DESCONOCIDO";
+        case TipoToken::DOS_PUNTOS:
+            return "DOS_PUNTOS";
+        case TipoToken::COMA:
+            return "COMA";
+        case TipoToken::CORCHETE_ABRE:
+            return "CORCHETE_ABRE";
+        case TipoToken::CORCHETE_CIERRA:
+            return "CORCHETE_CIERRA";
+        case TipoToken::LLAVE_ABRE:
+            return "LLAVE_ABRE";
+        case TipoToken::LLAVE_CIERRA:
+            return "LLAVE_CIERRA";
+        case TipoToken::PUNTO_COMA:
+            return "PUNTO_COMA";
+        case TipoToken::PUNTO:
+            return "PUNTO";
         default:
             return "UNKNOWN";
     }
