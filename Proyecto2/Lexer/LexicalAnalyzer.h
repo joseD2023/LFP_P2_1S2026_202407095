@@ -21,15 +21,11 @@ private:
     char avance();
 
 public:
-
-
     vector<Token> tokens;
     vector<LexicalError> errores;
     LexicalAnalyzer(string text);
     void analyze();
     void mostrarAnalyze();
-
-
 
 
 };

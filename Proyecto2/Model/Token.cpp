@@ -18,20 +18,30 @@ Token::Token(TipoToken tipo, string lexema, int fila, int columna) {
 
 string Token::getTipoToken() const {
     switch (tipo) {
-        case TipoToken::PALABRARESEVADA:
-            return "PALABRARESERVADA";
-        case TipoToken::NUMBER:
-            return "NUMBER";
+        case TipoToken::TABLERO:
+            return "TABLERO";
+        case TipoToken::COLUMNA:
+            return "COLUMNA";
+        case TipoToken::TAREA:
+            return "TAREA";
+        case TipoToken::PRIORIDAD:
+            return "PRIORIDAD";
+        case TipoToken::RESPONSABLE:
+            return "RESPONSABLE";
+        case TipoToken::FECHA_LIMITE:
+            return "FECHA_LIMITE";
+        case TipoToken::ALTA:
+            return "ALTA";
+        case TipoToken::MEDIA:
+            return "MEDIA";
+        case TipoToken::BAJA:
+            return "BAJA";
         case TipoToken::STRING:
             return "STRING";
-        case TipoToken::DELIMITADORES:
-            return "DELIMITADORES";
         case TipoToken::FECHA:
             return "FECHA";
-        case TipoToken::PRIORIDADES:
-            return "PRIORIDADES";
-        case TipoToken::DESCONOCIDO:
-            return "DESCONOCIDO";
+        case TipoToken::ENTERO:
+            return "ENTERO";
         case TipoToken::DOS_PUNTOS:
             return "DOS_PUNTOS";
         case TipoToken::COMA:
@@ -48,6 +58,10 @@ string Token::getTipoToken() const {
             return "PUNTO_COMA";
         case TipoToken::PUNTO:
             return "PUNTO";
+        case TipoToken::FIN_ARCHIVO:
+            return "FIN_ARCHIVO";
+        case TipoToken::DESCONOCIDO:
+            return "DESCONOCIDO";
         default:
             return "UNKNOWN";
     }

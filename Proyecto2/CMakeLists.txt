@@ -11,4 +11,13 @@ add_executable(Proyecto2 main.cpp
         Errores/LexicalError.h
         Errores/LexicalError.cpp
         Parser/SyntaxAnalyzer.h
-        Parser/SyntaxAnalyzer.cpp)
+        Parser/SyntaxAnalyzer.cpp
+        Model/Tablero.h
+        Server/Server.cpp
+        Server/Server.h
+        Server/Routes.cpp
+        Server/Routes.h
+        Errores/SyntaxError.h
+)
+
+target_link_libraries(Proyecto2 ws2_32)

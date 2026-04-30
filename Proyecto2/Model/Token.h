@@ -8,12 +8,25 @@
 using namespace std;
 
 enum class TipoToken {
-    PALABRARESEVADA, //Palabra Reservadas
-    NUMBER, //Entero
-    FECHA, //Fecha
+    /*Palabras Reservadas dentro del Lenguaje*/
+    TABLERO,
+    COLUMNA,
+    TAREA,
+    PRIORIDAD,
+    RESPONSABLE,
+    FECHA_LIMITE, //Fecha
+
+    /*Enumeracion de Prioridad*/
+    ALTA,
+    BAJA,
+    MEDIA,
+
+    /*Literales del Lenguaje*/
     STRING, //Cadena
-    DELIMITADORES, //Delimitadores
-    PRIORIDADES,  //Enum Prioridades
+    FECHA,
+    ENTERO,
+
+    /*Delimitadores*/
     LLAVE_ABRE,
     LLAVE_CIERRA,
     CORCHETE_ABRE,
@@ -22,6 +35,7 @@ enum class TipoToken {
     COMA,
     PUNTO_COMA,
     PUNTO,
+    FIN_ARCHIVO,
     DESCONOCIDO // ningun tipo Token
 };
 
@@ -32,6 +46,13 @@ public:
     string lexema;
     int columna;
     int fila;
+
+    Token() { //Nos va ayudar para utilizarlo en el parser
+        tipo = TipoToken::DESCONOCIDO;
+        lexema = "";
+        fila = 0;
+        columna = 0;
+    }
 
     Token(TipoToken tipo, string lexema, int fila, int columna);
     string getTipoToken() const;

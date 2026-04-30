@@ -38,21 +38,29 @@ void LexicalAnalyzer::mostrarAnalyze() {
         cout << "Tipo: ";
 
         switch (token.tipo) {
-            case TipoToken::PALABRARESEVADA: cout << "PALABRA RESERVADA"; break;
-            case TipoToken::PRIORIDADES: cout << "PRIORIDAD"; break;
+            case TipoToken::TABLERO: cout << "TABLERO"; break;
+            case TipoToken::COLUMNA: cout << "COLUMNA"; break;
+            case TipoToken::TAREA: cout << "TAREA"; break;
+            case TipoToken::PRIORIDAD: cout << "PRIORIDAD"; break;
+            case TipoToken::RESPONSABLE: cout << "RESPONSABLE"; break;
+            case TipoToken::FECHA_LIMITE: cout << "FECHA_LIMITE"; break;
+            case TipoToken::ALTA: cout << "ALTA"; break;
+            case TipoToken::MEDIA: cout << "MEDIA"; break;
+            case TipoToken::BAJA: cout << "BAJA"; break;
             case TipoToken::STRING: cout << "STRING"; break;
-            case TipoToken::DELIMITADORES: cout << "DELIMITADOR"; break;
-            case TipoToken::NUMBER: cout << "NUMERO"; break;
             case TipoToken::FECHA: cout << "FECHA"; break;
-            case TipoToken::DESCONOCIDO: cout << "DESCONOCIDO"; break;
-            case TipoToken::DOS_PUNTOS: cout << "DOS_PUNTOS"; break;
-            case TipoToken::COMA: cout << "COMA"; break;
-            case TipoToken::CORCHETE_ABRE: cout << "CORCHETE_ABRE"; break;
-            case TipoToken::CORCHETE_CIERRA: cout << "CORCHETE_CIERRA"; break;
+            case TipoToken::ENTERO: cout << "ENTERO"; break;
             case TipoToken::LLAVE_ABRE: cout << "LLAVE_ABRE"; break;
             case TipoToken::LLAVE_CIERRA: cout << "LLAVE_CIERRA"; break;
+            case TipoToken::CORCHETE_ABRE: cout << "CORCHETE_ABRE"; break;
+            case TipoToken::CORCHETE_CIERRA: cout << "CORCHETE_CIERRA"; break;
+            case TipoToken::DOS_PUNTOS: cout << "DOS_PUNTOS"; break;
+            case TipoToken::COMA: cout << "COMA"; break;
             case TipoToken::PUNTO_COMA: cout << "PUNTO_COMA"; break;
             case TipoToken::PUNTO: cout << "PUNTO"; break;
+
+            case TipoToken::FIN_ARCHIVO: cout << "EOF"; break;
+
             default: cout << "DESCONOCIDO"; break;
         }
 
@@ -63,7 +71,7 @@ void LexicalAnalyzer::mostrarAnalyze() {
 
     if (!errores.empty()) {
         cout << "\nERRORES ENCONTRADOS:\n";
-        cout << "Fila\tColumna\tLexema\tDescripcion\t       Gravedad" << endl;
+        cout << "Fila\tColumna\tLexema\tDescripcion\tGravedad" << endl;
 
         for (auto& error : errores) {
             cout << error.fila << "\t"
@@ -76,7 +84,6 @@ void LexicalAnalyzer::mostrarAnalyze() {
         cout << "\nNo se encontraron errores.\n";
     }
 }
-
 
 
 char LexicalAnalyzer::peek() {
@@ -188,35 +195,47 @@ void LexicalAnalyzer::analyze() {
                 break; //terminamos esta parte dle break
 
             case 1:
-                /*Entonces vamos a trabajar con el primer caso que es el de si es un caracter de string entonces trabajamos aquí
-                 * Basicamente es la construccion de los lexemas como TABLERO, COLUMNA solo debemos tener cuidado con lo que es la
-                 * fecha
-                 */
-
-                cout << "Construccion Lexema Estado 1: " << lexeme << endl;
-
-                if (isalpha(c) || c == '_') { //basicamente construimos las palabras en este apartado
+                // Construcción del lexema (igual que ya lo hacías)
+                if (isalpha(c) || c == '_') {
                     lexeme += avance();
-                    cout << "Construccion Caracter y _ : " << lexeme <<  endl;
-                }else {
-                    cout << "Verificamos si es una palabra resevada o prioridad: " << lexeme << endl;
-                    if (esReservada(lexeme)) {
-                        cout << "Palabras Lexemas en Reservadas si Valido " << lexeme << endl,
-                        tokens.push_back(Token(TipoToken::PALABRARESEVADA, lexeme, fila, columna));
-                        lexeme = "";
-                        estado = 0;
-                        break;
-                    }else if(esPrioridad(lexeme)) {
-                        tokens.push_back(Token(TipoToken::PRIORIDADES, lexeme,fila, columna));
-                        lexeme = "";
-                        estado = 0;
-                    }else {
-                        errores.push_back(LexicalError(lexeme, fila, columna, "Token No Reconocido", "ERROR"));
-                        lexeme = "";
-                        estado = 0;
-                    }
-                }
+                } else {
 
+                    if (lexeme == "TABLERO") {
+                        tokens.push_back(Token(TipoToken::TABLERO, lexeme, fila, columna));
+                    }
+                    else if (lexeme == "COLUMNA") {
+                        tokens.push_back(Token(TipoToken::COLUMNA, lexeme, fila, columna));
+                    }
+                    else if (lexeme == "tarea") {
+                        tokens.push_back(Token(TipoToken::TAREA, lexeme, fila, columna));
+                    }
+                    else if (lexeme == "prioridad") {
+                        tokens.push_back(Token(TipoToken::PRIORIDAD, lexeme, fila, columna));
+                    }
+                    else if (lexeme == "responsable") {
+                        tokens.push_back(Token(TipoToken::RESPONSABLE, lexeme, fila, columna));
+                    }
+                    else if (lexeme == "fecha_limite") {
+                        tokens.push_back(Token(TipoToken::FECHA_LIMITE, lexeme, fila, columna));
+                    }
+
+                    else if (lexeme == "ALTA") {
+                        tokens.push_back(Token(TipoToken::ALTA, lexeme, fila, columna));
+                    }
+                    else if (lexeme == "MEDIA") {
+                        tokens.push_back(Token(TipoToken::MEDIA, lexeme, fila, columna));
+                    }
+                    else if (lexeme == "BAJA") {
+                        tokens.push_back(Token(TipoToken::BAJA, lexeme, fila, columna));
+                    }
+                    else {
+                        errores.push_back(LexicalError(lexeme, fila, columna, "Token no reconocido", "ERROR"));
+                    }
+
+                    // Reset
+                    lexeme = "";
+                    estado = 0;
+                }
                 break;
 
             case 2:
@@ -228,12 +247,14 @@ void LexicalAnalyzer::analyze() {
 
                 if (isdigit(c)) {
                     lexeme += avance();
-                }
-
-                if (c == '-' && lexeme.size() == 4) {
+                } else if (c == '-' && lexeme.size() == 4) {
                     lexeme += avance();
                     estado = 4;
                     break;
+                }else {
+                    tokens.push_back(Token(TipoToken::ENTERO, lexeme, fila, columna));
+                    lexeme = "";
+                    estado = 0;
                 }
 
                 break;

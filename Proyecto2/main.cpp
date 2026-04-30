@@ -1,34 +1,25 @@
 #include <iostream>
 #include "../Proyecto2/Lexer/LexicalAnalyzer.h"
+#include "../Proyecto2/Parser/SyntaxAnalyzer.h"
 #include "string"
+#include "../Proyecto2/Server/Server.h"
 using namespace std;
 int main() {
 
     string texto = R"(TABLERO "Proyecto LFP" {
     COLUMNA "Por Hacer" {
-        tarea: "Diseñar AFD" [prioridad: ALTA, responsable: "Jorge",
-            fecha_limite: 2026-05-01],
-        tarea: "Implementar Lexer" [prioridad: ALTA, responsable: "María",
-            fecha_limite: 2026-05-08],
-        tarea: "Escribir casos de prueba" [prioridad: MEDIA,
-            responsable: "Carlos", fecha_limite: 2026-05-10],
-    };
-
-    COLUMNA "En Progreso" {
-        tarea: "Diseñar GUI" [prioridad: MEDIA, responsable: "Ana",
-            fecha_limite: 2026-05-05],
-    };
-
-    COLUMNA "Completado" {
-        tarea: "Investigar Qt" [prioridad: BAJA, responsable: "Pedro",
-            fecha_limite: 2026-04-20],
-        tarea: "Configurar GitHub" [prioridad: BAJA, responsable: "Jorge",
-            fecha_limite: 2026-04-18],
+        tarea: "GIT"  [prioridad: ALTA, responsable: "Jorge",
+            fecha_limite: 2026-05-01]
     };
 };)";
-    LexicalAnalyzer lexical(texto);
-    lexical.analyze();
-    lexical.mostrarAnalyze();
+    //LexicalAnalyzer lexical(texto);
+    //lexical.analyze();
+    //lexical.mostrarAnalyze();
+    //SyntaxAnalyzer parser(lexical.tokens);
+    //parser.parsePrograma();
+
+    Server server;
+    server.start(8080);
 
     return 0;
 }
