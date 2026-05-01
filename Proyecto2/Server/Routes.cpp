@@ -3,6 +3,7 @@
 #include "../Parser/SyntaxAnalyzer.h"
 #include <iostream>
 #include <map>
+#include <fstream>
 
 using namespace std;
 
@@ -152,7 +153,7 @@ string Routes::handle(string request) {
 
     cout << "\n=== ROUTE HIT ===\n";
 
-    if (request.find("POST /analyze") != string::npos) {
+    if (request.find("POST /analyze") != string::npos) { //enpoint analyze
 
         string body = extraerBody(request);
 
@@ -166,24 +167,43 @@ string Routes::handle(string request) {
         SyntaxAnalyzer parser(lexer.tokens);
         parser.parsePrograma();
 
+
+        if (!parser.error.existe) { // no deben existir errores para crear el arbol
+            ofstream file("arbol.dot");
+            file << parser.dot;
+            file.close();
+        }
+
         if (parser.error.existe) {
             return response(
                 "{\"estado\":\"error\",\"mensaje\":\"" + parser.error.mensaje + "\"}",
                 "application/json"
             );
         }
-
         return response(parser.toJSON(), "application/json");
     }
 
-    if (request.find("POST /report2") != string::npos) {
 
+    /*Enpoint para trabajar con la creacion del arbol*/
+    if (request.find("GET /download-dot") != string::npos) {
+        ifstream file("arbol.dot");
+        if (!file.is_open()) {
+            return response("digraph {};", "text/plain");
+        }
+
+        string content((istreambuf_iterator<char>(file)),
+        istreambuf_iterator<char>());
+        return response(content, "text/plain");
+    }
+
+
+
+
+    if (request.find("POST /report2") != string::npos) { //Enpoint para el reporte 2
         string body = extraerBody(request);
-
         if (body.empty()) {
             return response("{\"reporte2\":[]}", "application/json");
         }
-
         LexicalAnalyzer lexer(body);
         lexer.analyze();
 
@@ -193,22 +213,20 @@ string Routes::handle(string request) {
         );
     }
 
-    if (request.find("POST /report3") != string::npos) {
 
+
+
+    if (request.find("POST /report3") != string::npos) { //enpoint para el reporte 3
         string body = extraerBody(request);
-
         if (body.empty()) {
             return response("{\"errores\":[]}", "application/json");
         }
-
         LexicalAnalyzer lexer(body);
         lexer.analyze();
-
         return response(
             generarReporteErroresLexicos(lexer),
             "application/json"
         );
     }
-
     return "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n";
 }

@@ -102,3 +102,26 @@ export const getReport2 = async (texto) => {
 
     return await response.json();
 };
+
+
+/* Colocaremos un consumo de api para descargar el archivo .DOT del arbol y asi visualizarlo en una Graphiz */
+
+export const downloadDot = async () => {
+    const res = await fetch("http://localhost:8080/download-dot");
+    const blob = await res.blob();
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = "arbol.dot";
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+};
+
+
+export const getDot = async () => {
+    const res = await fetch("http://localhost:8080/download-dot");
+    return await res.text();
+};

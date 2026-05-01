@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getKanban, getErrors, getReport2 } from "../service/api";
+import { getKanban, getErrors, getReport2, getDot, downloadDot } from "../service/api";
 import Reporte1 from "./Reporte1";
 import Reporte2 from "./Reporte2";
 import ErrorTable from "./ErrorTable";
@@ -17,7 +17,15 @@ export default function Home() {
     const [reporte2, setReporte2] = useState(false);
     const [dataReporte2, setDataReporte2] = useState(null);
 
-    // 🔥 ANALIZAR
+    const[dot, setDot] = useState(""); // agregamos para obtener los datos del arbol 
+
+
+    const verDot = async() =>{
+        const text = await getDot(); 
+        setDot(text); //capturamos lo del arbol
+    }
+
+  
     const analizar = async () => {
 
         if (input.trim() === "") {
@@ -34,7 +42,7 @@ export default function Home() {
 
             let erroresTotales = [];
 
-            // 🔴 errores léxicos
+           
             if (erroresRes?.errores) {
                 erroresTotales = erroresTotales.concat(
                     erroresRes.errores.map(e => ({
@@ -153,10 +161,20 @@ export default function Home() {
                     Reporte 2
                 </button>
 
+                <button className="home-button" onClick={verDot}>
+                    Ver Arbol DOT
+                </button>
+
+                <button className="home-button" onClick={downloadDot}>
+                    Descargar .DOT
+
+                </button>
+
             </div>
 
             <div className="home-messages">
 
+    
                 {backendError && (
                     <div className="home-error">
                         <h4>Error:</h4>
@@ -179,6 +197,17 @@ export default function Home() {
                 {reporte2 && dataReporte2 && (
                     <div className="home-report">
                         <Reporte2 data={dataReporte2} />
+                    </div>
+                )}
+
+                {dot && (
+                    <div className="home-report">
+                        <h3>Arbol DOT: Copialo y Pegalo en Graphivz</h3>
+                        <textarea 
+                        value={dot}
+                        readOnly
+                        rows={20}
+                        style={{ width: "100%" }}/>
                     </div>
                 )}
 

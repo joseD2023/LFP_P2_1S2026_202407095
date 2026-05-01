@@ -20,19 +20,28 @@ public :
     Columna colActual;
     Tarea tareaActual;
     SyntaxError error;
+    string dot;
+    int nodoId = 0;
     SyntaxAnalyzer(vector<Token> t); //constructor como tal
     void nextToken(); //avanza al siguiente token
     string tipoToString(TipoToken t);
     void match(TipoToken esperando); // si el token es el esperado avanzamos si no lo es nos detenemos
     void parsePrograma();
-    void parseColumnas();
-    void parseColumna();
-    void parseTareas();
-    void parseTarea();
+
+
+    //aqui se cambio se agrego parametro
+    void parseColumnas(string padre);
+    void parseColumna(string padre);
+    void parseTareas(string padre);
+    void parseTarea(string padre);
+
+    //aqui tambien
     void parseAtributos();
     void parseAtributo();
     void parsePrioridad();
     string toJSON();
+    string nuevoNodo(string label, string color = "#D6EAF8", bool root = false);
+    void agregarArista(string padre, string hijo);
 
 
 };

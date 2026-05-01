@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include "../Model/Tablero.h"
 using namespace std;
 
@@ -43,7 +44,30 @@ SyntaxAnalyzer::SyntaxAnalyzer(vector<Token> t) {
     tablero = Tablero();
     colActual = Columna();
     tareaActual = Tarea();
+    dot  = "digraph ArbolDerivacion {\n";
+    dot += "rankdir=TB;\n";
+    dot += "node [shape=box, style=filled, fontname=\"Arial\"];\n";
 }
+
+
+
+string SyntaxAnalyzer::nuevoNodo(string label, string color, bool root) {
+
+    string id = "n" + to_string(nodoId++);
+
+    if (root) {
+        dot += id + " [label=\"" + label + "\", fillcolor=\"" + color + "\", fontcolor=white];\n";
+    } else {
+        dot += id + " [label=\"" + label + "\", fillcolor=\"" + color + "\"];\n";
+    }
+
+    return id;
+}
+
+void SyntaxAnalyzer::agregarArista(string padre, string hijo) {
+    dot += padre + " -> " + hijo + ";\n";
+}
+
 
 string SyntaxAnalyzer::toJSON() {
     string json = "{ \"tablero\": { ";
@@ -72,16 +96,12 @@ string SyntaxAnalyzer::toJSON() {
         }
 
         json += "]}";
-
         if (i < tablero.columnas.size() - 1) json += ",";
     }
 
     json += "]}}";
-
     return json;
 }
-
-/* ========= CONTROL TOKENS ========= */
 
 void SyntaxAnalyzer::nextToken() {
     if (error.existe) return;
@@ -92,71 +112,85 @@ void SyntaxAnalyzer::nextToken() {
     }
 }
 
-/* 🔥 MATCH MEJORADO */
 void SyntaxAnalyzer::match(TipoToken esperado) {
     if (error.existe) return;
 
     if (current.tipo == esperado) {
         nextToken();
     } else {
-
         error.existe = true;
-
         error.esperado = tipoToString(esperado);
         error.encontrado = current.getTipoToken();
-
-        // 🔥 NUEVO (CLAVE)
         error.lexema = current.lexema;
         error.fila = current.fila;
         error.columna = current.columna;
-
         error.mensaje =
-            "Se esperaba '" + error.esperado +
-            "' pero se encontró '" + error.encontrado + "'";
-
+            "Se esperaba '" + error.esperado + "' pero se encontró '" + error.encontrado + "'";
         return;
     }
 }
 
-/* ========= GRAMÁTICA ========= */
+
+
+string tareaNodeActual;
+string prioridadNodeActual;
+
 
 void SyntaxAnalyzer::parsePrograma() {
+
+    string root = nuevoNodo("<programa>", "#2E75B6", true);
+
     if (error.existe) return;
 
     match(TipoToken::TABLERO);
-    match(TipoToken::STRING);
 
+    string n1 = nuevoNodo("TABLERO");
+    agregarArista(root, n1);
+
+    match(TipoToken::STRING);
     tablero.nombre = limpiar(tokens[pos-1].lexema);
+
+    string n2 = nuevoNodo(tablero.nombre);
+    agregarArista(n1, n2);
 
     match(TipoToken::LLAVE_ABRE);
 
-    parseColumnas();
+    parseColumnas(n2);
 
     match(TipoToken::LLAVE_CIERRA);
     match(TipoToken::PUNTO_COMA);
+
+    dot += "}\n";
 }
 
-void SyntaxAnalyzer::parseColumnas() {
+void SyntaxAnalyzer::parseColumnas(string padre) {
     if (error.existe) return;
 
-    parseColumna();
+    parseColumna(padre);
 
     while (!error.existe && current.tipo == TipoToken::COLUMNA) {
-        parseColumna();
+        parseColumna(padre);
     }
 }
 
-void SyntaxAnalyzer::parseColumna() {
+void SyntaxAnalyzer::parseColumna(string padre) {
+
     if (error.existe) return;
 
     match(TipoToken::COLUMNA);
-    match(TipoToken::STRING);
 
+    string colNode = nuevoNodo("COLUMNA");
+    agregarArista(padre, colNode);
+
+    match(TipoToken::STRING);
     colActual.nombre = limpiar(tokens[pos-1].lexema);
+
+    string nameNode = nuevoNodo(colActual.nombre);
+    agregarArista(colNode, nameNode);
 
     match(TipoToken::LLAVE_ABRE);
 
-    parseTareas();
+    parseTareas(nameNode);
 
     match(TipoToken::LLAVE_CIERRA);
     match(TipoToken::PUNTO_COMA);
@@ -165,25 +199,31 @@ void SyntaxAnalyzer::parseColumna() {
     colActual = Columna();
 }
 
-void SyntaxAnalyzer::parseTareas() {
-    if (error.existe) return;
+void SyntaxAnalyzer::parseTareas(string padre) {
 
-    parseTarea();
+    parseTarea(padre);
 
     while (!error.existe && current.tipo == TipoToken::COMA) {
         match(TipoToken::COMA);
-        parseTarea();
+        parseTarea(padre);
     }
 }
 
-void SyntaxAnalyzer::parseTarea() {
+void SyntaxAnalyzer::parseTarea(string padre) {
+
     if (error.existe) return;
 
     match(TipoToken::TAREA);
     match(TipoToken::DOS_PUNTOS);
 
+    tareaNodeActual = nuevoNodo("TAREA");
+    agregarArista(padre, tareaNodeActual);
+
     match(TipoToken::STRING);
     tareaActual.nombre = limpiar(tokens[pos-1].lexema);
+
+    string nameNode = nuevoNodo(tareaActual.nombre);
+    agregarArista(tareaNodeActual, nameNode);
 
     match(TipoToken::CORCHETE_ABRE);
 
@@ -196,7 +236,6 @@ void SyntaxAnalyzer::parseTarea() {
 }
 
 void SyntaxAnalyzer::parseAtributos() {
-    if (error.existe) return;
 
     parseAtributo();
 
@@ -207,14 +246,10 @@ void SyntaxAnalyzer::parseAtributos() {
 }
 
 void SyntaxAnalyzer::parseAtributo() {
-    if (error.existe) return;
 
     if (current.tipo == TipoToken::PRIORIDAD) {
-
         match(TipoToken::PRIORIDAD);
-
         match(TipoToken::DOS_PUNTOS);
-
         parsePrioridad();
     }
     else if (current.tipo == TipoToken::RESPONSABLE) {
@@ -233,42 +268,37 @@ void SyntaxAnalyzer::parseAtributo() {
         match(TipoToken::FECHA);
         tareaActual.fecha = tokens[pos-1].lexema;
     }
-    else {
-
-        error.existe = true;
-        error.lexema = current.lexema;
-        error.fila = current.fila;
-        error.columna = current.columna;
-
-        error.mensaje = "Atributo no válido: " + current.getTipoToken();
-        return;
-    }
 }
 
 void SyntaxAnalyzer::parsePrioridad() {
+
     if (error.existe) return;
 
+    prioridadNodeActual = nuevoNodo("PRIORIDAD");
+    agregarArista(tareaNodeActual, prioridadNodeActual);
+
     if (current.tipo == TipoToken::ALTA) {
+
+        string n = nuevoNodo("ALTA");
+        agregarArista(prioridadNodeActual, n);
+
         tareaActual.prioridad = current.lexema;
         match(TipoToken::ALTA);
     }
     else if (current.tipo == TipoToken::MEDIA) {
+
+        string n = nuevoNodo("MEDIA");
+        agregarArista(prioridadNodeActual, n);
+
         tareaActual.prioridad = current.lexema;
         match(TipoToken::MEDIA);
     }
     else if (current.tipo == TipoToken::BAJA) {
+
+        string n = nuevoNodo("BAJA");
+        agregarArista(prioridadNodeActual, n);
+
         tareaActual.prioridad = current.lexema;
         match(TipoToken::BAJA);
-    }
-    else {
-        error.existe = true;
-        error.lexema = current.lexema;
-        error.fila = current.fila;
-        error.columna = current.columna;
-
-        error.mensaje =
-            "Se esperaba prioridad válida (ALTA, MEDIA, BAJA) y se encontró '" +
-            current.getTipoToken() + "'";
-        return;
     }
 }
