@@ -122,21 +122,18 @@ void LexicalAnalyzer::analyze() {
                 }
 
                 if (isalpha(c)) { //si encontramos el primer caracter entonces avanzamos a un estado de palabras
-                    cout << "ENTRAMOS ESTADO 1" << endl;
                     lexeme += avance();
                     estado = 1;
                     break;
                 }
 
                 if (isdigit(c)) { // si viene un digito redirigirnos a un estado donde trabajemos con ello
-                    cout << "ENTRAMOS ESTADO 2" << endl;
                     lexeme += avance();
                     estado = 2;
                     break;
                 }
 
                 if (c == '"') {
-                    cout << "ENTRAMOS ESTADO 3" << endl;
                     lexeme += avance();
                     estado = 3;
                     break;
@@ -243,7 +240,6 @@ void LexicalAnalyzer::analyze() {
                  * solos sino que vienen parte de las fechas
                  */
 
-                cout << "Construccion Lexema Estado 2: " << lexeme << endl;
 
                 if (isdigit(c)) {
                     lexeme += avance();
@@ -264,8 +260,6 @@ void LexicalAnalyzer::analyze() {
                  * Entonces basicamente ya deberia pasar digamos "Proyecto LFP"  entonces va guardando todo
                  * hasta que aparezca otra '"' entonces debemos tener el control
                  */
-
-                cout << "Construccion Lexema Estado 3: " << lexeme << endl;
 
                 if (c == '\0') {
                     errores.push_back(LexicalError(lexeme, fila, columna, "Cadena No Cerrada", "CRITICO"));
@@ -292,7 +286,6 @@ void LexicalAnalyzer::analyze() {
                 /*Aquí vamos con la continuacion de lo que es la fecha y la cual vamos a trabjar
                  * por el lexema ya viene tipo 2026- con 4 digitios
                  */
-                cout << "Construccion Lexema Estado 4: " << lexeme << endl;
 
                 if (isdigit(c) || c == '-') {
                     lexeme += avance(); /*aqui va a llegar a 2026-06 pero cuando aparezca */

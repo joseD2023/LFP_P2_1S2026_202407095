@@ -1,0 +1,48 @@
+.kanban-container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+}
+
+.kanban-column {
+    min-width: 280px;
+    background: #f4f4f4;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.kanban-title {
+    text-align: center;
+}
+
+.task-card {
+    background: white;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-left: 6px solid #ccc;
+}
+
+/* PRIORIDADES */
+.task-card.high {
+    border-left-color: red;
+}
+
+.task-card.medium {
+    border-left-color: orange;
+}
+
+.task-card.low {
+    border-left-color: green;
+}
+
+/* STATES */
+.loading-container {
+    padding: 20px;
+}
+
+.error-container {
+    padding: 20px;
+    color: red;
+}

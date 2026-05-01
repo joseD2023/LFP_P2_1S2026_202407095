@@ -1,0 +1,65 @@
+.kanban-container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+.kanban-column {
+    min-width: 280px;
+    background: #f4f4f4;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.kanban-title {
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+
+.task-card {
+    background: white;
+    margin-bottom: 12px;
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: 0.2s;
+}
+
+.task-card:hover {
+    transform: translateY(-3px);
+}
+
+
+.task-text {
+    margin: 2px 0;
+    font-size: 13px;
+    color: #555;
+}
+
+
+.task-priority-bar {
+    padding: 6px;
+    border-radius: 8px;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+
+.task-card.ALTA .task-priority-bar {
+    background: #e74c3c;
+}
+
+.task-card.MEDIA .task-priority-bar {
+    background: #f39c12;
+}
+
+.task-card.BAJA .task-priority-bar {
+    background: #2ecc71;
+}

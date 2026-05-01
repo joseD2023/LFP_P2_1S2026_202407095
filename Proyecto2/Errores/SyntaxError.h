@@ -7,7 +7,9 @@ using namespace std;
 
 struct SyntaxError {
     bool existe = false;
-    string mensaje = "";
+    string mensaje;
+    string esperado;
+    string encontrado;
 };
 
 #endif //PROYECTO2_SYNTAXERROR_H

@@ -1,0 +1,88 @@
+const API_URL = "http://localhost:8080/analyze";
+const REPORT_URL = "http://localhost:8080/report1";
+const REPORT_ERRORES = "http://localhost:8080/report3"; 
+
+
+/*Consumimos la parte del los datos analizados del servidor en c++ */
+export const getKanban = async (texto) => {
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: texto
+        });
+
+        if (!response.ok) {
+            throw new Error("Error HTTP: " + response.status);
+        }
+
+        const data = await response.json();
+        return data;
+
+    } catch (error) {
+        console.log("Error en el Servidor", error);
+    }
+};
+
+
+
+
+/*Consumimos la api para el reporte 1*/
+
+export const report1 = async (texto) => {
+    try {
+        const response = await fetch(REPORT_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: texto
+        });
+
+        if (!response.ok) {
+            throw new Error("Error HTTP: " + response.status);
+        }
+
+        const data = await response.json();
+        return data;
+
+    } catch (error) {
+        console.log("Error en reporte 1", error);
+    }
+};
+
+
+
+/*Ahora vamos a consumir los recursos de lo que son mi enpoint */
+export const getErrors = async (texto) => {
+    try {
+        const response = await fetch(REPORT_ERRORES, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: texto
+        });
+
+        const text = await response.text();
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            return {
+                status: "error",
+                mensaje: "Respuesta inválida del servidor",
+                raw: text
+            };
+        }
+
+        return data;
+
+    } catch (error) {
+        return {
+            status: "error",
+            mensaje: "Error de conexión: " + error.message
+        };
+    }
+};

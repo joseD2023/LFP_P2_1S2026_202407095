@@ -5,8 +5,31 @@
 #include "../Model/Tablero.h"
 #include <cstdlib>
 #include "vector"
-
 using namespace std;
+
+string SyntaxAnalyzer::tipoToString(TipoToken t) {
+    switch (t) {
+        case TipoToken::TABLERO: return "TABLERO";
+        case TipoToken::COLUMNA: return "COLUMNA";
+        case TipoToken::TAREA: return "TAREA";
+        case TipoToken::PRIORIDAD: return "prioridad";
+        case TipoToken::RESPONSABLE: return "responsable";
+        case TipoToken::FECHA_LIMITE: return "fecha_limite";
+        case TipoToken::STRING: return "STRING";
+        case TipoToken::DOS_PUNTOS: return ":";
+        case TipoToken::COMA: return ",";
+        case TipoToken::LLAVE_ABRE: return "{";
+        case TipoToken::LLAVE_CIERRA: return "}";
+        case TipoToken::CORCHETE_ABRE: return "[";
+        case TipoToken::CORCHETE_CIERRA: return "]";
+        case TipoToken::PUNTO_COMA: return ";";
+        case TipoToken::ALTA: return "ALTA";
+        case TipoToken::MEDIA: return "MEDIA";
+        case TipoToken::BAJA: return "BAJA";
+        default: return "TOKEN_DESCONOCIDO";
+    }
+}
+
 
 string limpiar(string s) {
     if (s.size() >= 2 && s[0] == '"' && s[s.size()-1] == '"') {
@@ -20,10 +43,8 @@ SyntaxAnalyzer::SyntaxAnalyzer(vector<Token> t) {
     this->tokens = t;
     this->pos = 0;
     this->current = tokens[pos];
-
     this->error.existe = false;
     this->error.mensaje= "";
-
     this->tablero = Tablero();
     this->colActual = Columna();
     this->tareaActual = Tarea();
@@ -84,7 +105,9 @@ void SyntaxAnalyzer::match(TipoToken esperado) {
     if (current.tipo == esperado) {
         nextToken();
     } else {
-        error.mensaje = "Error sintactico: Token invalido -> " + current.lexema;
+        error.mensaje = "Error sintactico: Token Invalido";
+        error.esperado = tipoToString(esperado);
+        error.encontrado = current.getTipoToken();
         error.existe = true;
         return;
     }
@@ -103,6 +126,7 @@ void SyntaxAnalyzer::parsePrograma() {
     if (error.existe) return;
 
     match(TipoToken::LLAVE_ABRE);
+
     parseColumnas();
     if (error.existe) return;
 
@@ -224,7 +248,7 @@ void SyntaxAnalyzer::parseAtributo() {
         match(TipoToken::FECHA);
     }
     else {
-        error.mensaje = "Error: atributo no valido -> " + current.lexema;
+        error.mensaje = "Error: atributo no valido -> " + current.getTipoToken();
         error.existe = true;
         return;
     }
@@ -246,7 +270,7 @@ void SyntaxAnalyzer::parsePrioridad() {
         match(TipoToken::BAJA);
     }
     else {
-        error.mensaje = "Error: prioridad no valida -> " + current.lexema;
+        error.mensaje = "Error: prioridad no valida -> " + current.getTipoToken();
         error.existe= true;
         return;
     }
