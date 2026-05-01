@@ -1,9 +1,12 @@
+import "../styles/errorTable.css"
+
+
 export default function ErrorTable({ errores }) {
 
     return (
         <div className="error-table-container">
 
-            <h3>Errores Léxicos</h3>
+            <h3>Errores Lexicos</h3>
 
             <table className="error-table">
 
@@ -19,6 +22,7 @@ export default function ErrorTable({ errores }) {
                 </thead>
 
                 <tbody>
+
                     {errores && errores.length > 0 ? (
                         errores.map((e, i) => (
                             <tr key={i}>
@@ -35,6 +39,7 @@ export default function ErrorTable({ errores }) {
                             <td colSpan="6">Sin errores</td>
                         </tr>
                     )}
+
                 </tbody>
 
             </table>

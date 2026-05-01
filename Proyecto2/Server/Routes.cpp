@@ -2,9 +2,25 @@
 #include "../Lexer/LexicalAnalyzer.h"
 #include "../Parser/SyntaxAnalyzer.h"
 #include <iostream>
+#include <map>
 
 using namespace std;
 
+
+struct InfoPersona {
+    int total = 0;
+    int alta = 0;
+    int media = 0;
+    int baja = 0;
+};
+
+
+string limpiarComillas(string s) {
+    if (s.size() >= 2 && s.front() == '"' && s.back() == '"') {
+        return s.substr(1, s.size() - 2);
+    }
+    return s;
+}
 
 string response(const string& body, const string& type) {
 
@@ -17,7 +33,6 @@ string response(const string& body, const string& type) {
         "Connection: close\r\n"
         "\r\n" + body;
 }
-
 
 string extraerBody(const string& request) {
 
@@ -35,33 +50,22 @@ string extraerBody(const string& request) {
     return body;
 }
 
-/*Aqui vamos a hacer los reportes De Errores Lexicos*/
-string generarReporteErroresLexicos(LexicalAnalyzer& lexer) {
 
-    cout << "\n=== GENERANDO ERRORES ===\n";
-    cout << "Cantidad: " << lexer.errores.size() << endl;
+string generarReporteErroresLexicos(LexicalAnalyzer& lexer) {
 
     string json = "{ \"errores\": [";
     int i = 1;
 
     for (auto& e : lexer.errores) {
 
-        cout << "\nERROR " << i << endl;
-        cout << "lexema: " << e.lexema << endl;
-
         json += "{";
         json += "\"no\":" + to_string(i++) + ",";
         json += "\"lexema\":\"" + e.lexema + "\",";
-        cout << "Lexema: " << e.lexema << endl;
         json += "\"tipo\":\"Léxico\",";
         json += "\"descripcion\":\"" + e.descripcion + "\",";
-        cout << "Descripcion: " << e.descripcion << endl;
         json += "\"fila\":" + to_string(e.fila) + ",";
-        cout << "Fila: " << e.fila << endl;
         json += "\"columna\":" + to_string(e.columna) + ",";
-        cout << "Columna: " << e.columna << endl;
         json += "\"gravedad\":\"" + e.gravedad + "\"";
-        cout << "Gravedad: " << e.gravedad << endl;
         json += "},";
     }
 
@@ -70,30 +74,94 @@ string generarReporteErroresLexicos(LexicalAnalyzer& lexer) {
 
     json += "]}";
 
-    cout << "\nJSON FINAL:\n" << json << endl;
-
     return json;
 }
 
+string generarReporte2(LexicalAnalyzer& lexer) {
+
+    map<string, InfoPersona> data;
+    int totalTareas = 0;
+
+    string responsable = "";
+
+    for (size_t i = 0; i < lexer.tokens.size(); i++) {
+
+        string tipo = lexer.tokens[i].getTipoToken();
+
+
+        if (tipo == "RESPONSABLE") {
+            if (i + 2 < lexer.tokens.size() &&
+                lexer.tokens[i + 2].getTipoToken() == "STRING") {
+                responsable = limpiarComillas(lexer.tokens[i + 2].lexema);
+            }
+        }
+
+
+        if (tipo == "PRIORIDAD") {
+            if (i + 2 < lexer.tokens.size()) {
+
+                string p = lexer.tokens[i + 2].getTipoToken();
+
+                if (p == "ALTA" || p == "MEDIA" || p == "BAJA") {
+
+                    if (responsable != "") {
+
+                        data[responsable].total++;
+
+                        if (p == "ALTA") data[responsable].alta++;
+                        else if (p == "MEDIA") data[responsable].media++;
+                        else if (p == "BAJA") data[responsable].baja++;
+
+                        totalTareas++;
+                    }
+                }
+            }
+        }
+    }
+
+    string json = "{ \"reporte2\": [";
+    int i = 0;
+
+    for (auto& entry : data) {
+
+        string nombre = entry.first; // ya viene limpio
+        InfoPersona info = entry.second;
+
+        int porcentaje = (totalTareas == 0)
+            ? 0
+            : (info.total * 100 / totalTareas);
+
+        json += "{";
+        json += "\"responsable\":\"" + nombre + "\",";
+        json += "\"total\":" + to_string(info.total) + ",";
+        json += "\"ALTA\":" + to_string(info.alta) + ",";
+        json += "\"MEDIA\":" + to_string(info.media) + ",";
+        json += "\"BAJA\":" + to_string(info.baja) + ",";
+        json += "\"porcentaje\":" + to_string(porcentaje);
+        json += "}";
+
+        if (++i < data.size()) json += ",";
+    }
+
+    json += "] }";
+
+    return json;
+}
 
 string Routes::handle(string request) {
 
     cout << "\n=== ROUTE HIT ===\n";
 
-    /* ANALYZE */
     if (request.find("POST /analyze") != string::npos) {
 
         string body = extraerBody(request);
 
         if (body.empty()) {
-            cout << "BODY VACÍO ANALYZE\n";
             return response("{\"error\":\"body vacío\"}", "application/json");
         }
 
         LexicalAnalyzer lexer(body);
         lexer.analyze();
-
-        cout << "TOKENS: " << lexer.tokens.size() << endl;
 
         SyntaxAnalyzer parser(lexer.tokens);
         parser.parsePrograma();
@@ -108,23 +176,33 @@ string Routes::handle(string request) {
         return response(parser.toJSON(), "application/json");
     }
 
-    /* reporte 3 de errores */
-    if (request.find("POST /report3") != string::npos) {
-
-        cout << "\n    REPORT3    \n";
+    if (request.find("POST /report2") != string::npos) {
 
         string body = extraerBody(request);
 
         if (body.empty()) {
-            cout << "BODY VACÍO REPORT3\n";
-            return response("{\"errores\":[]}", "application/json");
+            return response("{\"reporte2\":[]}", "application/json");
         }
 
         LexicalAnalyzer lexer(body);
         lexer.analyze();
 
-        cout << "TOKENS REPORT3: " << lexer.tokens.size() << endl;
-        cout << "ERRORES REPORT3: " << lexer.errores.size() << endl;
+        return response(
+            generarReporte2(lexer),
+            "application/json"
+        );
+    }
+
+    if (request.find("POST /report3") != string::npos) {
+
+        string body = extraerBody(request);
+
+        if (body.empty()) {
+            return response("{\"errores\":[]}", "application/json");
+        }
+
+        LexicalAnalyzer lexer(body);
+        lexer.analyze();
 
         return response(
             generarReporteErroresLexicos(lexer),

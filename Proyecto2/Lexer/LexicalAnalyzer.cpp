@@ -187,6 +187,7 @@ void LexicalAnalyzer::analyze() {
 
                 //si no es ninguno de estos entonces debe venir un error
                 lexeme += avance();
+
                 errores.push_back(LexicalError(lexeme, fila, columna, "Caracter No reconocido", "ERROR"));
                 lexeme = "";
                 break; //terminamos esta parte dle break

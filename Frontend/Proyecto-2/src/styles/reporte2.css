@@ -1,0 +1,69 @@
+.reporte2-container {
+    margin-top: 20px;
+}
+
+.reporte2-title {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.reporte2-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+}
+
+.reporte2-table th {
+    background-color: #2c3e50;
+    color: white;
+    padding: 10px;
+}
+
+.reporte2-table td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+.reporte2-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.reporte2-table tr:hover {
+    background-color: #dfe6e9;
+    transition: 0.2s;
+}
+
+
+.alta {
+    font-weight: bold;
+}
+
+.media {
+
+    font-weight: bold;
+}
+
+.baja {
+    font-weight: bold;
+}
+
+.barra-container {
+    width: 100%;
+    background-color: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    height: 18px;
+}
+
+.barra {
+    height: 100%;
+    background-color: #3498db;
+    text-align: center;
+    color: white;
+    font-size: 11px;
+    line-height: 18px;
+    border-radius: 6px;
+    transition: width 0.4s ease;
+}

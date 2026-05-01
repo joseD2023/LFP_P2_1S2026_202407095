@@ -86,3 +86,19 @@ export const getErrors = async (texto) => {
         };
     }
 };
+
+
+
+/*Ahora vamos con el siguiente reporte que es el 2 */
+
+export const getReport2 = async (texto) => {
+    const response = await fetch("http://localhost:8080/report2", {
+        method: "POST",
+        headers: {
+            "Content-Type": "text/plain"
+        },
+        body: texto
+    });
+
+    return await response.json();
+};

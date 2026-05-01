@@ -3,8 +3,6 @@
 #include <vector>
 #include <iostream>
 #include "../Model/Tablero.h"
-#include <cstdlib>
-#include "vector"
 using namespace std;
 
 string SyntaxAnalyzer::tipoToString(TipoToken t) {
@@ -30,7 +28,6 @@ string SyntaxAnalyzer::tipoToString(TipoToken t) {
     }
 }
 
-
 string limpiar(string s) {
     if (s.size() >= 2 && s[0] == '"' && s[s.size()-1] == '"') {
         return s.substr(1, s.size() - 2);
@@ -38,19 +35,15 @@ string limpiar(string s) {
     return s;
 }
 
-
 SyntaxAnalyzer::SyntaxAnalyzer(vector<Token> t) {
-    this->tokens = t;
-    this->pos = 0;
-    this->current = tokens[pos];
-    this->error.existe = false;
-    this->error.mensaje= "";
-    this->tablero = Tablero();
-    this->colActual = Columna();
-    this->tareaActual = Tarea();
+    tokens = t;
+    pos = 0;
+    current = tokens[pos];
+    error.existe = false;
+    tablero = Tablero();
+    colActual = Columna();
+    tareaActual = Tarea();
 }
-
-
 
 string SyntaxAnalyzer::toJSON() {
     string json = "{ \"tablero\": { ";
@@ -88,54 +81,59 @@ string SyntaxAnalyzer::toJSON() {
     return json;
 }
 
-/* Empezamos el programa  */
+/* ========= CONTROL TOKENS ========= */
 
 void SyntaxAnalyzer::nextToken() {
     if (error.existe) return;
+
     pos++;
     if (pos < tokens.size()) {
         current = tokens[pos];
     }
 }
 
-
+/* 🔥 MATCH MEJORADO */
 void SyntaxAnalyzer::match(TipoToken esperado) {
     if (error.existe) return;
 
     if (current.tipo == esperado) {
         nextToken();
     } else {
-        error.mensaje = "Error sintactico: Token Invalido";
+
+        error.existe = true;
+
         error.esperado = tipoToString(esperado);
         error.encontrado = current.getTipoToken();
-        error.existe = true;
+
+        // 🔥 NUEVO (CLAVE)
+        error.lexema = current.lexema;
+        error.fila = current.fila;
+        error.columna = current.columna;
+
+        error.mensaje =
+            "Se esperaba '" + error.esperado +
+            "' pero se encontró '" + error.encontrado + "'";
+
         return;
     }
 }
 
-/* Comenzamos con la Gramatica */
+/* ========= GRAMÁTICA ========= */
 
 void SyntaxAnalyzer::parsePrograma() {
     if (error.existe) return;
 
     match(TipoToken::TABLERO);
-    if (error.existe) return;
-
-    tablero.nombre = limpiar(current.lexema);
     match(TipoToken::STRING);
-    if (error.existe) return;
+
+    tablero.nombre = limpiar(tokens[pos-1].lexema);
 
     match(TipoToken::LLAVE_ABRE);
 
     parseColumnas();
-    if (error.existe) return;
 
     match(TipoToken::LLAVE_CIERRA);
-    if (error.existe) return;
-
     match(TipoToken::PUNTO_COMA);
-
-    cout << "Analisis Sintactico terminado Exitosamente" << endl;
 }
 
 void SyntaxAnalyzer::parseColumnas() {
@@ -152,19 +150,15 @@ void SyntaxAnalyzer::parseColumna() {
     if (error.existe) return;
 
     match(TipoToken::COLUMNA);
-    if (error.existe) return;
-
-    colActual.nombre = limpiar(current.lexema);
     match(TipoToken::STRING);
-    if (error.existe) return;
+
+    colActual.nombre = limpiar(tokens[pos-1].lexema);
 
     match(TipoToken::LLAVE_ABRE);
+
     parseTareas();
-    if (error.existe) return;
 
     match(TipoToken::LLAVE_CIERRA);
-    if (error.existe) return;
-
     match(TipoToken::PUNTO_COMA);
 
     tablero.columnas.push_back(colActual);
@@ -186,18 +180,14 @@ void SyntaxAnalyzer::parseTarea() {
     if (error.existe) return;
 
     match(TipoToken::TAREA);
-    if (error.existe) return;
-
     match(TipoToken::DOS_PUNTOS);
-    if (error.existe) return;
 
-    tareaActual.nombre = limpiar(current.lexema);
     match(TipoToken::STRING);
-    if (error.existe) return;
+    tareaActual.nombre = limpiar(tokens[pos-1].lexema);
 
     match(TipoToken::CORCHETE_ABRE);
+
     parseAtributos();
-    if (error.existe) return;
 
     match(TipoToken::CORCHETE_CIERRA);
 
@@ -222,34 +212,35 @@ void SyntaxAnalyzer::parseAtributo() {
     if (current.tipo == TipoToken::PRIORIDAD) {
 
         match(TipoToken::PRIORIDAD);
-        if (error.existe) return;
 
         match(TipoToken::DOS_PUNTOS);
+
         parsePrioridad();
     }
     else if (current.tipo == TipoToken::RESPONSABLE) {
 
         match(TipoToken::RESPONSABLE);
-        if (error.existe) return;
-
         match(TipoToken::DOS_PUNTOS);
 
-        tareaActual.responsable = limpiar(current.lexema);
         match(TipoToken::STRING);
+        tareaActual.responsable = limpiar(tokens[pos-1].lexema);
     }
     else if (current.tipo == TipoToken::FECHA_LIMITE) {
 
         match(TipoToken::FECHA_LIMITE);
-        if (error.existe) return;
-
         match(TipoToken::DOS_PUNTOS);
 
-        tareaActual.fecha = current.lexema;
         match(TipoToken::FECHA);
+        tareaActual.fecha = tokens[pos-1].lexema;
     }
     else {
-        error.mensaje = "Error: atributo no valido -> " + current.getTipoToken();
+
         error.existe = true;
+        error.lexema = current.lexema;
+        error.fila = current.fila;
+        error.columna = current.columna;
+
+        error.mensaje = "Atributo no válido: " + current.getTipoToken();
         return;
     }
 }
@@ -270,8 +261,14 @@ void SyntaxAnalyzer::parsePrioridad() {
         match(TipoToken::BAJA);
     }
     else {
-        error.mensaje = "Error: prioridad no valida -> " + current.getTipoToken();
-        error.existe= true;
+        error.existe = true;
+        error.lexema = current.lexema;
+        error.fila = current.fila;
+        error.columna = current.columna;
+
+        error.mensaje =
+            "Se esperaba prioridad válida (ALTA, MEDIA, BAJA) y se encontró '" +
+            current.getTipoToken() + "'";
         return;
     }
 }

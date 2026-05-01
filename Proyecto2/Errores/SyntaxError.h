@@ -10,6 +10,11 @@ struct SyntaxError {
     string mensaje;
     string esperado;
     string encontrado;
+
+    //le agregamos para continuar con el reporte
+    string lexema;
+    int fila = 0;
+    int columna = 0;
 };
 
 #endif //PROYECTO2_SYNTAXERROR_H
