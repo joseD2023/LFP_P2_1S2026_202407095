@@ -7,14 +7,12 @@
 
 using namespace std;
 
-
 struct InfoPersona {
     int total = 0;
     int alta = 0;
     int media = 0;
     int baja = 0;
 };
-
 
 string limpiarComillas(string s) {
     if (s.size() >= 2 && s.front() == '"' && s.back() == '"') {
@@ -24,7 +22,6 @@ string limpiarComillas(string s) {
 }
 
 string response(const string& body, const string& type) {
-
     return
         "HTTP/1.1 200 OK\r\n"
         "Content-Type: " + type + "\r\n"
@@ -36,102 +33,116 @@ string response(const string& body, const string& type) {
 }
 
 string extraerBody(const string& request) {
-
     size_t pos = request.find("\r\n\r\n");
-
     if (pos == string::npos) {
         cout << "ERROR: sin body HTTP\n";
         return "";
     }
-
     string body = request.substr(pos + 4);
-
     cout << "\n=== DEBUG BODY ===\n" << body << endl;
-
     return body;
 }
 
+string escaparJSON(const string& s) {
+    string resultado;
+    for (char c : s) {
+        if (c == '"') resultado += "\\\"";
+        else if (c == '\\') resultado += "\\\\";
+        else if (c == '\n') resultado += "\\n";
+        else if (c == '\r') resultado += "\\r";
+        else if (c == '\t') resultado += "\\t";
+        else resultado += c;
+    }
+    return resultado;
+}
 
-string generarReporteErroresLexicos(LexicalAnalyzer& lexer) {
 
+
+//unificamos los errores sintacticos y lexicos
+string generarReporteUnificado(LexicalAnalyzer& lexer, SyntaxAnalyzer& parser) {
     string json = "{ \"errores\": [";
-    int i = 1;
+    int contador = 1;
 
+    // Errores LÉXICOS
     for (auto& e : lexer.errores) {
-
         json += "{";
-        json += "\"no\":" + to_string(i++) + ",";
-        json += "\"lexema\":\"" + e.lexema + "\",";
+        json += "\"no\":" + to_string(contador++) + ",";
+        json += "\"lexema\":\"" + escaparJSON(e.lexema) + "\",";
         json += "\"tipo\":\"Léxico\",";
-        json += "\"descripcion\":\"" + e.descripcion + "\",";
+        json += "\"descripcion\":\"" + escaparJSON(e.descripcion) + "\",";
         json += "\"fila\":" + to_string(e.fila) + ",";
-        json += "\"columna\":" + to_string(e.columna) + ",";
-        json += "\"gravedad\":\"" + e.gravedad + "\"";
+        json += "\"columna\":" + to_string(e.columna);
         json += "},";
     }
 
-    if (!lexer.errores.empty())
+    // Error SINTÁCTICO (el primero que encontró el parser)
+    if (parser.error.existe) {
+        json += "{";
+        json += "\"no\":" + to_string(contador) + ",";
+        json += "\"lexema\":\"" + escaparJSON(parser.error.lexema) + "\",";
+        json += "\"tipo\":\"Sintáctico\",";
+        json += "\"descripcion\":\"" + escaparJSON(parser.error.mensaje) + "\",";
+        json += "\"fila\":" + to_string(parser.error.fila) + ",";
+        json += "\"columna\":" + to_string(parser.error.columna);
+        json += "}";
+    } else if (!lexer.errores.empty() && json.back() == ',') {
         json.pop_back();
+    }
 
     json += "]}";
-
     return json;
 }
 
 string generarReporte2(LexicalAnalyzer& lexer) {
-
     map<string, InfoPersona> data;
     int totalTareas = 0;
-
-    string responsable = "";
+    string responsableActual = "";
+    string prioridadActual = "";
+    bool enTarea = false;
 
     for (size_t i = 0; i < lexer.tokens.size(); i++) {
-
         string tipo = lexer.tokens[i].getTipoToken();
 
+        if (tipo == "TAREA") {
+            if (enTarea && !responsableActual.empty()) {
+                data[responsableActual].total++;
+                if (prioridadActual == "ALTA") data[responsableActual].alta++;
+                else if (prioridadActual == "MEDIA") data[responsableActual].media++;
+                else if (prioridadActual == "BAJA") data[responsableActual].baja++;
+                totalTareas++;
+            }
+            responsableActual = "";
+            prioridadActual = "";
+            enTarea = true;
+        }
 
-        if (tipo == "RESPONSABLE") {
-            if (i + 2 < lexer.tokens.size() &&
-                lexer.tokens[i + 2].getTipoToken() == "STRING") {
-                responsable = limpiarComillas(lexer.tokens[i + 2].lexema);
+        if (tipo == "PRIORIDAD" && enTarea) {
+            if (i + 2 < lexer.tokens.size()) {
+                prioridadActual = lexer.tokens[i + 2].getTipoToken();
             }
         }
 
-
-        if (tipo == "PRIORIDAD") {
+        if (tipo == "RESPONSABLE" && enTarea) {
             if (i + 2 < lexer.tokens.size()) {
-
-                string p = lexer.tokens[i + 2].getTipoToken();
-
-                if (p == "ALTA" || p == "MEDIA" || p == "BAJA") {
-
-                    if (responsable != "") {
-
-                        data[responsable].total++;
-
-                        if (p == "ALTA") data[responsable].alta++;
-                        else if (p == "MEDIA") data[responsable].media++;
-                        else if (p == "BAJA") data[responsable].baja++;
-
-                        totalTareas++;
-                    }
-                }
+                responsableActual = limpiarComillas(lexer.tokens[i + 2].lexema);
             }
         }
     }
 
+    if (enTarea && !responsableActual.empty()) {
+        data[responsableActual].total++;
+        if (prioridadActual == "ALTA") data[responsableActual].alta++;
+        else if (prioridadActual == "MEDIA") data[responsableActual].media++;
+        else if (prioridadActual == "BAJA") data[responsableActual].baja++;
+        totalTareas++;
+    }
+
     string json = "{ \"reporte2\": [";
     int i = 0;
-
     for (auto& entry : data) {
-
-        string nombre = entry.first; // ya viene limpio
+        string nombre = entry.first;
         InfoPersona info = entry.second;
-
-        int porcentaje = (totalTareas == 0)
-            ? 0
-            : (info.total * 100 / totalTareas);
-
+        int porcentaje = (totalTareas == 0) ? 0 : (info.total * 100 / totalTareas);
         json += "{";
         json += "\"responsable\":\"" + nombre + "\",";
         json += "\"total\":" + to_string(info.total) + ",";
@@ -140,23 +151,43 @@ string generarReporte2(LexicalAnalyzer& lexer) {
         json += "\"BAJA\":" + to_string(info.baja) + ",";
         json += "\"porcentaje\":" + to_string(porcentaje);
         json += "}";
-
         if (++i < data.size()) json += ",";
     }
-
     json += "] }";
-
     return json;
 }
 
-string Routes::handle(string request) {
 
+
+//nuevo enpoint para visualizar
+
+// Agrega esta función para generar el JSON de tokens
+string generarReporteTokens(LexicalAnalyzer& lexer) {
+    string json = "{ \"tokens\": [";
+
+    for (size_t i = 0; i < lexer.tokens.size(); i++) {
+        Token& t = lexer.tokens[i];
+        json += "{";
+        json += "\"no\":" + to_string(i + 1) + ",";
+        json += "\"lexema\":\"" + escaparJSON(t.lexema) + "\",";
+        json += "\"tipo\":\"" + t.getTipoToken() + "\",";
+        json += "\"fila\":" + to_string(t.fila) + ",";
+        json += "\"columna\":" + to_string(t.columna);
+        json += "}";
+        if (i < lexer.tokens.size() - 1) json += ",";
+    }
+
+    json += "]}";
+    return json;
+}
+
+
+
+string Routes::handle(string request) {
     cout << "\n=== ROUTE HIT ===\n";
 
-    if (request.find("POST /analyze") != string::npos) { //enpoint analyze
-
+    if (request.find("POST /analyze") != string::npos) {
         string body = extraerBody(request);
-
         if (body.empty()) {
             return response("{\"error\":\"body vacío\"}", "application/json");
         }
@@ -167,12 +198,9 @@ string Routes::handle(string request) {
         SyntaxAnalyzer parser(lexer.tokens);
         parser.parsePrograma();
 
-
-        if (!parser.error.existe) { // no deben existir errores para crear el arbol
-            ofstream file("arbol.dot");
-            file << parser.dot;
-            file.close();
-        }
+        ofstream file("arbol.dot");
+        file << parser.dot;
+        file.close();
 
         if (parser.error.existe) {
             return response(
@@ -184,49 +212,58 @@ string Routes::handle(string request) {
     }
 
 
-    /*Enpoint para trabajar con la creacion del arbol*/
+    //endpoint tokens
+
+    // Agrega esto en Routes.cpp dentro de Routes::handle()
+    if (request.find("POST /getTokens") != string::npos) {
+        string body = extraerBody(request);
+        if (body.empty()) {
+            return response("{\"tokens\":[]}", "application/json");
+        }
+
+        LexicalAnalyzer lexer(body);
+        lexer.analyze();
+
+        return response(generarReporteTokens(lexer), "application/json");
+    }
+
     if (request.find("GET /download-dot") != string::npos) {
         ifstream file("arbol.dot");
         if (!file.is_open()) {
             return response("digraph {};", "text/plain");
         }
-
-        string content((istreambuf_iterator<char>(file)),
-        istreambuf_iterator<char>());
+        string content((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
         return response(content, "text/plain");
     }
 
-
-
-
-    if (request.find("POST /report2") != string::npos) { //Enpoint para el reporte 2
+    if (request.find("POST /report2") != string::npos) {
         string body = extraerBody(request);
         if (body.empty()) {
             return response("{\"reporte2\":[]}", "application/json");
         }
         LexicalAnalyzer lexer(body);
         lexer.analyze();
-
-        return response(
-            generarReporte2(lexer),
-            "application/json"
-        );
+        return response(generarReporte2(lexer), "application/json");
     }
 
-
-
-
-    if (request.find("POST /report3") != string::npos) { //enpoint para el reporte 3
+    // ENDPOINT /report3 - Devuelve errores léxicos + sintácticos
+    if (request.find("POST /report3") != string::npos) {
         string body = extraerBody(request);
         if (body.empty()) {
             return response("{\"errores\":[]}", "application/json");
         }
+
+        // Análisis Léxico
         LexicalAnalyzer lexer(body);
         lexer.analyze();
-        return response(
-            generarReporteErroresLexicos(lexer),
-            "application/json"
-        );
+
+        // Análisis Sintáctico
+        SyntaxAnalyzer parser(lexer.tokens);
+        parser.parsePrograma();
+
+        // Devolver errores unificados (léxicos + sintácticos)
+        return response(generarReporteUnificado(lexer, parser), "application/json");
     }
+
     return "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n";
 }

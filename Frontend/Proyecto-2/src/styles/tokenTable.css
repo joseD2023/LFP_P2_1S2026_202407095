@@ -1,0 +1,31 @@
+.token-table-container {
+    margin-top: 20px;
+}
+
+.token-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.token-table th {
+    background: #2c3e50;
+    color: white;
+    padding: 10px;
+}
+
+.token-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.token-table tr:hover {
+    background: #f2f2f2;
+}
+
+.token-table tr td:first-child {
+    font-weight: bold;
+    color: #2980b9;
+}

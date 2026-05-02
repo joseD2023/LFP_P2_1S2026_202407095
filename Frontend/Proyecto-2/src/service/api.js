@@ -125,3 +125,25 @@ export const getDot = async () => {
     const res = await fetch("http://localhost:8080/download-dot");
     return await res.text();
 };
+
+
+
+// funcion tokens
+export const getTokens = async (texto) => {
+    try {
+        const response = await fetch("http://localhost:8080/getTokens", {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain"
+            },
+            body: texto
+        });
+        
+        const data = await response.json();
+        return data;
+        
+    } catch (error) {
+        console.log("Error obteniendo tokens:", error);
+        return { tokens: [] };
+    }
+};
